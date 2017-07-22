@@ -23,32 +23,35 @@ start:
     char: db 0
     
 cls:
+    pusha                   ; back up registers
     mov ah,00h              ; change graphics mode clears screen
     mov al,03h              ; text mode -- 80x25, 16 colours
     int 10h                 ; BIOS interrupt
+    popa                    ; restore registers
     ret
     
 fb_print:
-    mov cx, 0xb800
-    mov es, cx          ; set es
-    mov bx, [cursor]
-    ;mov bx, [cursor]        ; get current cursor position
+    pusha                   ; back up registers
+    mov cx, 0xb800          ; set es to 0xb800, so 0x000b8000 can be accessed via [es:bx]
+    mov es, cx              
+    mov bx, [cursor]        ; set bx to the current cursor position
     
 .repeat:
     lodsb                   ; get byte from string in SI to AL
     cmp al, 0               ; if it is equal to 0...
     je .done                ; jump to .done
-    ;mov ah, al               ; move al up to ah
     mov ah, 0x24            ; colour code
-    mov [es:bx], ax            ; move ax into framebuffer
-    add [cursor], word 2  ; increment cursor
-    mov bx, [cursor]
-    jmp .repeat
+    mov [es:bx], ax         ; move ax into framebuffer
+    add [cursor], word 2    ; increment cursor to next column
+    mov bx, [cursor]        ; move the new cursor value into bx
+    jmp .repeat             ; loop
     
 .done:
-    ret
+    popa                    ; restore registers
+    ret                     ; return from call
     
 print:
+    pusha                   ; back up registers
     mov ah, 0Eh             ; Put 0Eh in ah -- Tells BIOS to print character in AL at INT 10h
     
 .repeat:
@@ -59,6 +62,7 @@ print:
     jmp .repeat             ; and repeat.
     
 .done:
+    popa                    ; restore register
     ret                     ; return from CALL
     
 
