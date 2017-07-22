@@ -8,12 +8,20 @@ start:
     mov ax, 07c0h           ; set data segment to where we're loaded
     mov ds, ax
     
+    call cls                ; clear the screen
+    
     mov si, text_string     ; put string position into SI
     call print_string       ; call print_string routine
     
     jmp $
     
     text_string db "Welcome to Bum'dOS v1", 0
+    
+cls:
+    mov ah,00h              ; change graphics mode clears screen
+    mov al,03h              ; text mode -- 80x25, 16 colours
+    int 10h                 ; BIOS interrupt
+    ret
 
 print_string:
     mov ah, 0Eh             ; Put 0Eh in ah -- Tells BIOS to print character in AL at INT 10h
