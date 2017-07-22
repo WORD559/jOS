@@ -17,8 +17,10 @@ start:
     
     jmp $
     
+    text db "w", 0
     splash_text: db "Welcome to Bum'dOS v1", 10, 10, 13, "The only time you can truly say an OS is bumting.", 0
-    cursor: dd 0x000b8000
+    cursor: dw 0x00
+    char: db 0
     
 cls:
     mov ah,00h              ; change graphics mode clears screen
@@ -27,20 +29,21 @@ cls:
     ret
     
 fb_print:
-    mov bx, [cursor]        ; get current cursor position
+    mov cx, 0xb800
+    mov es, cx          ; set es
+    mov bx, [cursor]
+    ;mov bx, [cursor]        ; get current cursor position
     
 .repeat:
-    lodsb                   ; get byte from SI to AL
+    lodsb                   ; get byte from string in SI to AL
     cmp al, 0               ; if it is equal to 0...
     je .done                ; jump to .done
-    mov ah, al              ; move the byte into AH
-    mov al, 0x24            ; green foreground, red background into AL
-    mov [bx],ax             ; move the contents of AX into the framebuffer address pointed to by the cursor
-    mov eax,[cursor]        ; move the contents of the cursor to EAX
-    mov ebx,16              ; move 16 into ebx
-    add [cursor],ebx        ; Add 16 to the cursor and store it back in the cursor
-    mov bx, [cursor]        ; move the contents of the cursor to BX again
-    jmp .repeat             ; loop
+    ;mov ah, al               ; move al up to ah
+    mov ah, 0x24            ; colour code
+    mov [es:bx], ax            ; move ax into framebuffer
+    add [cursor], word 2  ; increment cursor
+    mov bx, [cursor]
+    jmp .repeat
     
 .done:
     ret
