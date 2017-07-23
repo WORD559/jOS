@@ -18,9 +18,9 @@ start:
     jmp $
     
     text db "w", 0
-    splash_text: db "Welcome to Bum'dOS v1\nThe only time you can truly say an OS is\n bumting.", 0
+    splash_text: db "Welcome to Bum'dOS v1\nThe only time you can truly say an OS is bumting.", 0
     cursor: dw 0x00
-    char: db 0
+    colour: db 0x07
     
 cls:
     pusha                   ; back up registers
@@ -42,7 +42,7 @@ fb_print:
     je .done                ; jump to .done
     cmp al, 5ch             ; see if "\" -- escape character
     je .escape
-    mov ah, 0x24            ; colour code
+    mov ah, [colour]            ; colour code
     mov [es:bx], ax         ; move ax into framebuffer
     add [cursor], word 2    ; increment cursor to next column
     mov bx, [cursor]        ; move the new cursor value into bx
@@ -50,47 +50,54 @@ fb_print:
     
 .escape:
     lodsb                   ; get next byte
-    cmp al, 6Eh             ; see if equal to "n"
+    cmp al, 6Eh             ; see if equal to "n" for newline
     je .newln
+;    cmp al, 42h             ; see if equal to "B" for background colour
+;    je .chg_bgcl
     jmp .repeat             ; return to main loop
     
+;.chg_bgcl:
+;    lodsb                   ; get next byte
+    
 .newln:
-    push ax                 ; back up ax
-    push bx                 ; back up bx
+    push ax                 ; back up ax, cx, and dx
     push cx
+    push dx
     mov ax, [cursor]        ; move cursor to al
     add ax, word 160        ; go to next line
-    mov cx, ax
+    mov cx, ax              ; new value of cursor in cx
     
-    mov bx, word 160
+    mov dx, 0               ; clear dx for division
+    mov bx, word 160        ; divide by 160
     div bx
-    sub cx, dx
-    
+    sub cx, dx              ; subtract remainder
+
     mov [cursor], cx        ; write cursor back to memory
+    mov bx, cx              ; put cursor back in bx
+    pop dx
     pop cx  
-    pop bx
     pop ax
-    mov bx, [cursor]
     jmp .repeat             ; return to main loop
     
 .done:
     popa                    ; restore registers
     ret                     ; return from call
     
-print:
-    pusha                   ; back up registers
-    mov ah, 0Eh             ; Put 0Eh in ah -- Tells BIOS to print character in AL at INT 10h
-    
-.repeat:
-    lodsb                   ; load a byte from the string in SI to AL
-    cmp al, 0               ; if AL == 0...
-    je .done                ; jump to done...
-    int 10h                 ; else call the BIOS interrupt to print AL...
-    jmp .repeat             ; and repeat.
-    
-.done:
-    popa                    ; restore register
-    ret                     ; return from CALL
+;Old print subroutine using BIOS interrupts -- not really needed anymore
+;print:
+;    pusha                   ; back up registers
+;    mov ah, 0Eh             ; Put 0Eh in ah -- Tells BIOS to print character in AL at INT 10h
+;    
+;.repeat:
+;    lodsb                   ; load a byte from the string in SI to AL
+;    cmp al, 0               ; if AL == 0...
+;    je .done                ; jump to done...
+;    int 10h                 ; else call the BIOS interrupt to print AL...
+;    jmp .repeat             ; and repeat.
+;    
+;.done:
+;    popa                    ; restore register
+;    ret                     ; return from CALL
     
 
     times 510-($-$$) db 0   ; fill the rest of the boot sector with 0s
