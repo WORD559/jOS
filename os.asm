@@ -13,12 +13,12 @@
 ;7 = Light Grey
 ;8 = Dark Grey
 ;9 = Light Blue
-;: = Light Green
-;; = Light Cyan
-;< = Light Red
-;= = Light Magenta
-;> = Light Brown
-;? = White
+;: = Light Green    (A)
+;; = Light Cyan     (B)
+;< = Light Red      (C)
+;= = Light Magenta  (D)
+;> = Light Brown    (E)
+;? = White          (F)
 
 start:
     mov ax, 07c0h           ; 4K stack space after the bootloader -- code is running at 0x07c0
@@ -29,7 +29,8 @@ start:
     mov ax, 07c0h           ; set data segment to where we're loaded
     mov ds, ax
     
-    call cls                ; clear the screen
+    mov [colour], byte 0xFC
+    call cl_cls                ; clear the screen
     
     mov si, splash_text     ; put string position into SI
     call fb_print           ; call print_string routine
@@ -37,16 +38,37 @@ start:
     jmp $
     
     text db "w", 0
-    splash_text: db "\B?\F<Welcome to Bum'dOS v1\nThe only time you can truly say an OS is bumting.", 0
+    splash_text: db "Welcome to Bum'dOS v1\nThe only time you can truly say an OS is bumting.", 0
     cursor: dw 0x00
     colour: db 0x07
     
-cls:
+cls:; set colour to 0x<B><F>
     pusha                   ; back up registers
     mov ah,00h              ; change graphics mode clears screen
     mov al,03h              ; text mode -- 80x25, 16 colours
     int 10h                 ; BIOS interrupt
     popa                    ; restore registers
+    ret
+    
+cl_cls:
+    pusha                   ; back up registers
+    mov bx, 0               ; set cursor to 0
+    mov cx, 0xb800          ; set es
+    mov es, cx
+    mov cl, [colour]
+    
+.loop:
+    mov [es:bx], byte 0x20  ; overwrite character with space
+    inc bx                  ; move forward one byte
+    mov [es:bx], cl         ; set colour
+    inc bx
+    cmp bx, 0xFA0           ; if at the end of the framebuffer, end
+    je .done                ; otherwise, loop
+    jmp .loop
+    
+.done:
+    mov [cursor], word 0
+    popa
     ret
     
 fb_print:
