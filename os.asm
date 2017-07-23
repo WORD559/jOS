@@ -29,7 +29,7 @@ start:
     mov ax, 07c0h           ; set data segment to where we're loaded
     mov ds, ax
     
-    mov [colour], byte 0xFC
+    mov [colour], byte 0x70
     call cl_cls                ; clear the screen
     
     mov si, splash_text     ; put string position into SI
@@ -38,7 +38,7 @@ start:
     jmp $
     
     text db "w", 0
-    splash_text: db "Welcome to Bum'dOS v1\nThe only time you can truly say an OS is bumting.", 0
+    splash_text: db "Welcome to Bum'dOS v2\n\nThe only OS you can truly call \F<b\F6u\F>m\F:t\F9i\F1n\F5g\F0.", 0
     cursor: dw 0x00
     colour: db 0x07
     
