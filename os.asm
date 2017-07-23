@@ -18,7 +18,7 @@ start:
     jmp $
     
     text db "w", 0
-    splash_text: db "Welcome to Bum'dOS v1", 10, 10, 13, "The only time you can truly say an OS is bumting.", 0
+    splash_text: db "Welcome to Bum'dOS v1\nThe only time you can truly say an OS is\n bumting.", 0
     cursor: dw 0x00
     char: db 0
     
@@ -40,11 +40,38 @@ fb_print:
     lodsb                   ; get byte from string in SI to AL
     cmp al, 0               ; if it is equal to 0...
     je .done                ; jump to .done
+    cmp al, 5ch             ; see if "\" -- escape character
+    je .escape
     mov ah, 0x24            ; colour code
     mov [es:bx], ax         ; move ax into framebuffer
     add [cursor], word 2    ; increment cursor to next column
     mov bx, [cursor]        ; move the new cursor value into bx
     jmp .repeat             ; loop
+    
+.escape:
+    lodsb                   ; get next byte
+    cmp al, 6Eh             ; see if equal to "n"
+    je .newln
+    jmp .repeat             ; return to main loop
+    
+.newln:
+    push ax                 ; back up ax
+    push bx                 ; back up bx
+    push cx
+    mov ax, [cursor]        ; move cursor to al
+    add ax, word 160        ; go to next line
+    mov cx, ax
+    
+    mov bx, word 160
+    div bx
+    sub cx, dx
+    
+    mov [cursor], cx        ; write cursor back to memory
+    pop cx  
+    pop bx
+    pop ax
+    mov bx, [cursor]
+    jmp .repeat             ; return to main loop
     
 .done:
     popa                    ; restore registers
