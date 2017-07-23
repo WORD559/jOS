@@ -37,7 +37,7 @@ start:
     jmp $
     
     text db "w", 0
-    splash_text: db "\B?Welcome to Bum'dOS v1\nThe only time you can truly say an OS is bumting.", 0
+    splash_text: db "\B?\F<Welcome to Bum'dOS v1\nThe only time you can truly say an OS is bumting.", 0
     cursor: dw 0x00
     colour: db 0x07
     
@@ -73,20 +73,37 @@ fb_print:
     je .newln
     cmp al, 42h             ; see if equal to "B" for background colour
     je .chg_bgcl
+    cmp al, 46h             ; see if equal to "F" for foreground colour
+    je .chg_fgcl
     jmp .repeat             ; return to main loop
     
-.chg_bgcl:
+.chg_cl:
     push bx
     lodsb                   ; get next byte
     sub al, 0x30            ; turn ascii into number, from 0 to ? (0-F)
     mov bl, [colour]        ; load current colour
-    and bl, 00001111b       ; blank background nibble
-    shl al, 4               ; shift al up
-    or bl, al               ; put the background nibble in
+    and bl, ch              ; blank selected nibble
+    shl al, cl              ; shift al up
+    or bl, al               ; put the nibble in
     mov [colour], bl        ; store it back in memory
     pop bx                  ; restore bx
+    ret
+    
+.chg_bgcl:
+    push cx                 ; back up cx
+    mov cl, 4               ; set shift amount
+    mov ch, 00001111b       ; set OR mask
+    call .chg_cl            ; change the colours
+    pop cx                  ; restore cx
     jmp .repeat
     
+.chg_fgcl:
+    push cx                 ; back up cx
+    mov cl, 0               ; set left shift amount (0, no left shift)
+    mov ch, 11110000b       ; set OR mask
+    call .chg_cl            ; change the colours
+    pop cx                  ; restore cx
+    jmp .repeat
     
 .newln:
     push ax                 ; back up ax, cx, and dx
