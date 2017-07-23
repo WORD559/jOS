@@ -1,6 +1,25 @@
     BITS 16
     
 ;0x000b8000 -- framebuffer address
+
+;;;Colour Codes;;;
+;0 = Black
+;1 = Blue
+;2 = Green
+;3 = Cyan
+;4 = Red
+;5 = Magenta
+;6 = Brown
+;7 = Light Grey
+;8 = Dark Grey
+;9 = Light Blue
+;: = Light Green
+;; = Light Cyan
+;< = Light Red
+;= = Light Magenta
+;> = Light Brown
+;? = White
+
 start:
     mov ax, 07c0h           ; 4K stack space after the bootloader -- code is running at 0x07c0
     add ax, 288             ; (4098 + 512)/16 bytes per paragraph
@@ -18,7 +37,7 @@ start:
     jmp $
     
     text db "w", 0
-    splash_text: db "Welcome to Bum'dOS v1\nThe only time you can truly say an OS is bumting.", 0
+    splash_text: db "\B?Welcome to Bum'dOS v1\nThe only time you can truly say an OS is bumting.", 0
     cursor: dw 0x00
     colour: db 0x07
     
@@ -52,12 +71,22 @@ fb_print:
     lodsb                   ; get next byte
     cmp al, 6Eh             ; see if equal to "n" for newline
     je .newln
-;    cmp al, 42h             ; see if equal to "B" for background colour
-;    je .chg_bgcl
+    cmp al, 42h             ; see if equal to "B" for background colour
+    je .chg_bgcl
     jmp .repeat             ; return to main loop
     
-;.chg_bgcl:
-;    lodsb                   ; get next byte
+.chg_bgcl:
+    push bx
+    lodsb                   ; get next byte
+    sub al, 0x30            ; turn ascii into number, from 0 to ? (0-F)
+    mov bl, [colour]        ; load current colour
+    and bl, 00001111b       ; blank background nibble
+    shl al, 4               ; shift al up
+    or bl, al               ; put the background nibble in
+    mov [colour], bl        ; store it back in memory
+    pop bx                  ; restore bx
+    jmp .repeat
+    
     
 .newln:
     push ax                 ; back up ax, cx, and dx
