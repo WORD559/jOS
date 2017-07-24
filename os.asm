@@ -21,14 +21,6 @@
 ;? = White          (F)
 
 start:
-    mov ax, 07c0h           ; 4K stack space after the bootloader -- code is running at 0x07c0
-    add ax, 288             ; (4098 + 512)/16 bytes per paragraph
-    mov ss, ax              ; sets up the stack
-    mov sp, 4096            ; moves the stack pointer
-    
-    mov ax, 07c0h           ; set data segment to where we're loaded
-    mov ds, ax
-    
     mov [colour], byte 0x7B
     call cl_cls                ; clear the screen
     
@@ -143,9 +135,6 @@ fb_print:
     popa                    ; restore registers
     ret                     ; return from call
     
-stack_start:
-    times stack_size db 0   ; Reserve space for the stack
-stack_end:
 
 ;Old print subroutine using BIOS interrupts -- not really needed anymore
 ;print:

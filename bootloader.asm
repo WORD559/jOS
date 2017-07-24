@@ -1,32 +1,19 @@
 %define paragraphs(s,c,b) ((s+c)/b)
-%define stack_size 4096
+%define stack_size 0x76d0
     BITS 16
     
 ;0x000b8000 -- framebuffer address
 
-;;;Colour Codes;;;
-;0 = Black
-;1 = Blue
-;2 = Green
-;3 = Cyan
-;4 = Red
-;5 = Magenta
-;6 = Brown
-;7 = Light Grey
-;8 = Dark Grey
-;9 = Light Blue
-;: = Light Green    (A)
-;; = Light Cyan     (B)
-;< = Light Red      (C)
-;= = Light Magenta  (D)
-;> = Light Brown    (E)
-;? = White          (F)
+;;;Memory Map;;;
+;00000 - 003ff   IVT
+;00400 - 004ff   BDA
+;00500 - 0052f   Dangerous Zone (Petch Zone)
+;00530 - 07bff   Stack
+;07c00 - 07dff   IPL
 
-    ;mov ax, 07c0h           ; 4K stack space after the bootloader -- code is running at 0x07c0
-    ;add ax, paragraphs(4096,512,16)             ; (4096 + 512)/16 bytes per paragraph (288 paragraphs)
-    mov ax, stack_start
-    mov ss, ax              ; sets up the stack
-    mov sp, stack_size      ; moves the stack pointer to allocated stack after the OS
+    mov ax, 0x0053          ; set ss to 0x0053 -- start of free space
+    mov ss, ax              ; Interrupts are disabled for the next instruction.
+    mov sp, stack_size      ; sets up the stack pointer in the free space
     
     mov ax, 07c0h           ; set data segment to where we're loaded
     mov ds, ax
@@ -38,7 +25,7 @@
     
     hlt
     
-    start_text: db "Bum'd OS starting!", 10,10,13,"Loading bootloader v1...", 0
+    start_text: db "Bum'd OS starting!", 10,10,13,"Bootloader v1 is loaded!", 0
     
 cls:
     pusha                   ; back up registers
