@@ -143,6 +143,10 @@ fb_print:
     popa                    ; restore registers
     ret                     ; return from call
     
+stack_start:
+    times stack_size db 0   ; Reserve space for the stack
+stack_end:
+
 ;Old print subroutine using BIOS interrupts -- not really needed anymore
 ;print:
 ;    pusha                   ; back up registers

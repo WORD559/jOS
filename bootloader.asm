@@ -1,4 +1,5 @@
 %define paragraphs(s,c,b) ((s+c)/b)
+%define stack_size 4096
     BITS 16
     
 ;0x000b8000 -- framebuffer address
@@ -21,10 +22,11 @@
 ;> = Light Brown    (E)
 ;? = White          (F)
 
-    mov ax, 07c0h           ; 4K stack space after the bootloader -- code is running at 0x07c0
-    add ax, paragraphs(4096,512,16)             ; (4096 + 512)/16 bytes per paragraph (288 paragraphs)
+    ;mov ax, 07c0h           ; 4K stack space after the bootloader -- code is running at 0x07c0
+    ;add ax, paragraphs(4096,512,16)             ; (4096 + 512)/16 bytes per paragraph (288 paragraphs)
+    mov ax, stack_start
     mov ss, ax              ; sets up the stack
-    mov sp, 4096            ; moves the stack pointer
+    mov sp, stack_size      ; moves the stack pointer to allocated stack after the OS
     
     mov ax, 07c0h           ; set data segment to where we're loaded
     mov ds, ax
