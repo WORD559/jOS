@@ -1,6 +1,7 @@
 %define paragraphs(s,c,b) ((s+c)/b)
 %define stack_size 0x76d0
-%define os_size 1024
+%define sectors 2
+%define os_size (sectors*512+512)
     BITS 16
     
 ;0x000b8000 -- framebuffer address
@@ -23,10 +24,38 @@
     
     mov si, start_text      ; put string position into SI
     call print              ; call print_string routine
+    mov si, load_text
+    call print
+    ;start loading OS from disk
+    mov [boot_device], dl   ; back up boot device number
     
-    hlt
+    mov ax, 0x07c0          ; address from start of programs
+    mov es, ax
+    mov ah, 0x02            ; set to read
+    mov al, sectors         ; how many sectors to load
+    xor ch, ch              ; set cylinder to 0
+    mov cl, 2               ; load from sector 2
+    xor dh, dh              ; head 0 (dh) and boot device
+    mov bx, 0x0200          ; where to read data to
+    int 13h                 ; BIOS interrupt to read data
     
-    start_text: db "Bum'd OS starting!", 10,10,13,"Bootloader v1 is loaded!", 0
+    ;Error checking
+    cmp ah, 0
+    je 0x0200
+    mov si, error_text
+    call print
+    cmp ah, 0x20
+    jne stop
+    mov si, ctrl_error
+    call print
+    
+    stop: hlt
+    
+    boot_device: db 0
+    start_text: db "Bum'd OS starting!", 10,10,13,"Bootloader v1 is loaded!", 10,13,0
+    load_text: db "Loading OS from disk...",0
+    error_text: db "Error loading from disk!",0
+    ctrl_error: db 10,13,"Controller error!",0
     
 cls:
     pusha                   ; back up registers

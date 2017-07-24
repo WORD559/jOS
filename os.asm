@@ -24,13 +24,13 @@ start:
     mov [colour], byte 0x7B
     call cl_cls                ; clear the screen
     
-    mov [cursor], word 214
+    mov [cursor], word 210
     mov si, splash_text     ; put string position into SI
     call fb_print           ; call print_string routine
     
     jmp $
     
-    splash_text: db "==Welcome to Bum'dOS v2!==\n\n\F0The only OS you can truly call \F<b\F6u\F>m\F:t\F9i\F1n\F5g\F0.", 0
+    splash_text: db "==Welcome to Bum'dOS v2.5!==\n\n\F0The only OS you can truly call \F6b\F<u\F>m\F:t\F9i\F1n\F5g\F0.", 0
     cursor: dw 0x00
     colour: db 0x07
     
