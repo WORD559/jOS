@@ -1,5 +1,5 @@
-    BITS 16
-    
+%include "bootloader.asm"
+    BITS 16    
 ;0x000b8000 -- framebuffer address
 
 ;;;Colour Codes;;;
@@ -29,28 +29,20 @@ start:
     mov ax, 07c0h           ; set data segment to where we're loaded
     mov ds, ax
     
-    mov [colour], byte 0x70
+    mov [colour], byte 0x7B
     call cl_cls                ; clear the screen
     
+    mov [cursor], word 214
     mov si, splash_text     ; put string position into SI
     call fb_print           ; call print_string routine
     
     jmp $
     
-    text db "w", 0
-    splash_text: db "Welcome to Bum'dOS v2\n\nThe only OS you can truly call \F<b\F6u\F>m\F:t\F9i\F1n\F5g\F0.", 0
+    splash_text: db "==Welcome to Bum'dOS v2!==\n\n\F0The only OS you can truly call \F<b\F6u\F>m\F:t\F9i\F1n\F5g\F0.", 0
     cursor: dw 0x00
     colour: db 0x07
     
-cls:; set colour to 0x<B><F>
-    pusha                   ; back up registers
-    mov ah,00h              ; change graphics mode clears screen
-    mov al,03h              ; text mode -- 80x25, 16 colours
-    int 10h                 ; BIOS interrupt
-    popa                    ; restore registers
-    ret
-    
-cl_cls:
+cl_cls:; set colour to 0x<B><F>
     pusha                   ; back up registers
     mov bx, 0               ; set cursor to 0
     mov cx, 0xb800          ; set es
@@ -166,7 +158,3 @@ fb_print:
 ;.done:
 ;    popa                    ; restore register
 ;    ret                     ; return from CALL
-    
-
-    times 510-($-$$) db 0   ; fill the rest of the boot sector with 0s
-    dw 0xAA55               ; and add a boot sector signature.
