@@ -1,5 +1,6 @@
 %define paragraphs(s,c,b) ((s+c)/b)
 %define stack_size 0x76d0
+%define os_size 1024
     BITS 16
     
 ;0x000b8000 -- framebuffer address

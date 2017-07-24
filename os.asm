@@ -135,6 +135,8 @@ fb_print:
     popa                    ; restore registers
     ret                     ; return from call
     
+times os_size-($-$$) db 0           ; fill the rest of the sector
+    
 
 ;Old print subroutine using BIOS interrupts -- not really needed anymore
 ;print:
