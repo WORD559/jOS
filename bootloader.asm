@@ -3,6 +3,7 @@
 %define sectors 2
 %define os_size (sectors*512+512)
     BITS 16
+    ORG 0
     
 ;0x000b8000 -- framebuffer address
 
@@ -13,6 +14,28 @@
 ;00530 - 07bff   Stack
 ;07c00 - 07dff   IPL
 
+    jmp short loader
+    times 9 db 0
+    
+    BytesPerSector: dw 512
+    SectorsPerCluster: db 1
+    ReservedSectors: dw 1
+    FATcount: db 2
+    MaxDirEntries: dw 224
+    TotalSectors: dw 2880
+    db 0
+    SectorsPerFAT: dw 9
+    SectorsPerTrack: dw 18
+    NumberOfHeads: dw 2
+    dd 0
+    dd 0
+    dw 0
+    BootSignature: db 0x29
+    VolumeID: dd 77
+    VolumeLabel: db "Bum'dOS   ",0
+    FSType: db "FAT12   "
+
+loader:
     mov ax, 0x0053          ; set ss to 0x0053 -- start of free space
     mov ss, ax              ; Interrupts are disabled for the next instruction.
     mov sp, stack_size      ; sets up the stack pointer in the free space
@@ -26,8 +49,18 @@
     call print              ; call print_string routine
     mov si, load_text
     call print
-    ;start loading OS from disk
+    
     mov [boot_device], dl   ; back up boot device number
+    
+    ;;;Start loading File Allocation Table (FAT)
+    mov ax, 0x07c0          ; address from start of programs
+    mov es, ax
+    mov ah, 0x02            ; set to read
+    mov al, SectorsPerFAT   ; how many sectors to load
+    
+    
+    
+    ;start loading OS from disk
     
     mov ax, 0x07c0          ; address from start of programs
     mov es, ax

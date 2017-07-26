@@ -1,4 +1,5 @@
-%include "bootloader.asm"
+;;%include "bootloader.asm"
+;This, when compiled, goes onto the floppy disk. The bootloader must be installed into the boot sector.
     BITS 16    
 ;0x000b8000 -- framebuffer address
 
