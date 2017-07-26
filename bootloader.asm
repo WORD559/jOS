@@ -51,19 +51,59 @@ loader:
     call print
     
     mov [boot_device], dl   ; back up boot device number
+    jmp .load_fat
     
-    ;;;Start loading File Allocation Table (FAT)
+;;;Start loading File Allocation Table (FAT)
+.load_fat:
     mov ax, 0x07c0          ; address from start of programs
     mov es, ax
     mov ah, 0x02            ; set to read
     mov al, SectorsPerFAT   ; how many sectors to load
+    xor ch, ch              ; cylinder 0
+    mov cl, (1+ReservedSectors)  ; Load FAT1
+    xor dh, dh              ; head 0
+    mov bx, 0x0200          ; read data to 512B after start of code
+    int 13h
+    cmp ah, 0
+    je .load_root
+    mov si, error_text
+    call print
+    hlt
+
+;;;Start loading root directory
+.load_root:    
+    mov si, fat_loaded
+    call print
+    mov al, [FATcount]
+    mul word [SectorsPerFAT]
+    add al, [ReservedSectors]
+    mov cl, al              ; Load after FATs
+
+    mul word [BytesPerSector]
+    mov bx,ax               ; Load to after BOTH FATs in memory
     
+    mov ax, 32
+    mul word [MaxDirEntries]
+    div word [BytesPerSector] ; number of sectors
     
+    xor dh, dh              ; head 0
+    mov dl, [boot_device]   ; boot device
+    xor ch, ch              ; cylinder 0
+    
+    mov ah, 0x02
+    
+    int 13h
+    cmp ah, 0
+    je .load_OS
+    mov si, error_text
+    call print
+    jmp $
     
     ;start loading OS from disk
-    
-    mov ax, 0x07c0          ; address from start of programs
-    mov es, ax
+.load_OS:
+    mov si, root_loaded
+    call print
+    jmp $
     mov ah, 0x02            ; set to read
     mov al, sectors         ; how many sectors to load
     xor ch, ch              ; set cylinder to 0
@@ -89,6 +129,10 @@ loader:
     load_text: db "Loading OS from disk...",0
     error_text: db "Error loading from disk!",0
     ctrl_error: db 10,13,"Controller error!",0
+    fat_loaded: db 10,13,"FAT loaded.",0
+    root_loaded: db 10,13,"Root loaded.",0
+    root_len: db 0
+    db 0
     
 cls:
     pusha                   ; back up registers

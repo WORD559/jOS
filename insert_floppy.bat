@@ -1,0 +1,1 @@
+fat_imgen -m -f floppy.flp -i %1
