@@ -78,14 +78,15 @@ loader:
     mov al, [FATcount]
     mul word [SectorsPerFAT]
     add al, [ReservedSectors]
-    div byte [max_sectors]
+    div byte [SectorsPerTrack]
     mov ch, ah
-    mov cl, al              ; Load after FATs
+    mov cl, al              ; Load data from after FATs
     
+    xor dx, dx
     xor ax, ax
     mov al, ch
-    mul byte [max_sectors]
-    add ax, word 17
+    mul byte [SectorsPerTrack]
+    add al, cl
     mul word [BytesPerSector]
     mov bx,ax               ; Load to after BOTH FATs in memory
     
