@@ -71,24 +71,31 @@ loader:
     hlt
 
 ;;;Start loading root directory
-.load_root:    
+.load_root:
+    xor dx, dx              ; blank dx for division
     mov si, fat_loaded
     call print
     mov al, [FATcount]
     mul word [SectorsPerFAT]
     add al, [ReservedSectors]
+    div byte [max_sectors]
+    mov ch, ah
     mov cl, al              ; Load after FATs
-
+    
+    xor ax, ax
+    mov al, ch
+    mul byte [max_sectors]
+    add ax, word 17
     mul word [BytesPerSector]
     mov bx,ax               ; Load to after BOTH FATs in memory
     
+    xor dx, dx              ; blank dx for division
     mov ax, 32
     mul word [MaxDirEntries]
     div word [BytesPerSector] ; number of sectors
     
     xor dh, dh              ; head 0
     mov dl, [boot_device]   ; boot device
-    xor ch, ch              ; cylinder 0
     
     mov ah, 0x02
     
@@ -118,21 +125,15 @@ loader:
     mov si, error_text
     call print
     cmp ah, 0x20
-    jne stop
-    mov si, ctrl_error
-    call print
-    
-    stop: hlt
+    jmp $
     
     boot_device: db 0
     start_text: db "Bum'd OS starting!", 10,10,13,"Bootloader v1 is loaded!", 10,13,0
     load_text: db "Loading OS from disk...",0
     error_text: db "Error loading from disk!",0
-    ctrl_error: db 10,13,"Controller error!",0
     fat_loaded: db 10,13,"FAT loaded.",0
     root_loaded: db 10,13,"Root loaded.",0
-    root_len: db 0
-    db 0
+    max_sectors: db 17
     
 cls:
     pusha                   ; back up registers
