@@ -124,7 +124,6 @@ loader:
     je 0x0200
     mov si, error_text
     call print
-    cmp ah, 0x20
     jmp $
     
     boot_device: db 0
