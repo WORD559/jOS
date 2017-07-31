@@ -58,9 +58,10 @@ loader:
     mov ax, 0x07c0          ; address from start of programs
     mov es, ax
     mov ah, 0x02            ; set to read
-    mov al, SectorsPerFAT   ; how many sectors to load
+    mov al, [SectorsPerFAT]   ; how many sectors to load
     xor ch, ch              ; cylinder 0
-    mov cl, (1+ReservedSectors)  ; Load FAT1
+    mov cl, [ReservedSectors]  ; Load FAT1
+    add cl, byte 1
     xor dh, dh              ; head 0
     mov bx, 0x0200          ; read data to 512B after start of code
     int 13h
