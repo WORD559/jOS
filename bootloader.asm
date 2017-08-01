@@ -141,6 +141,13 @@ loader:
     add bx, 26
     xor cx, cx
     mov cl, [fs:bx]
+    call .read_segment
+    jmp .jump_OS
+    
+.read_multi_segment:
+    jmp $
+    
+.read_segment:
     add cl, byte 31
     call LBA_to_CHS
     mov dl, [boot_device]
@@ -149,14 +156,13 @@ loader:
     mov al, 1
     int 13h
     cmp ah, 0
-    je .jump_OS
+    je .return
     mov si, error_text
     call print
     jmp $
+    .return: ret
     
-.read_multi_segment:
-    jmp $
-    
+;;DATA HERE
     boot_device: db 0
     ;start_text: db "Bootloader v1", 10,13,0
     ;load_text: db "Loading OS...",0
@@ -164,6 +170,7 @@ loader:
     fat_loaded: db 10,13,"FATs + root loaded.",0
     filename: db "OS      BIN"
     file_loc: dw 0
+;;END OF DATA
     
 LBA_to_CHS: ; store LBA in cl
     mov [lba], cl           ; store LBA value
