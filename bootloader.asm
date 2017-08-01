@@ -183,7 +183,6 @@ LBA_to_CHS: ; store LBA in cl
     ;H = (LBA / SPT) mod HPC
     mov al, [lba]
     div word [SectorsPerTrack]
-    mov [temp], dx          ; store remainder -- it's used to find the sector
     xor dx, dx
     div word [NumberOfHeads]
     mov [head], dx
@@ -192,16 +191,19 @@ LBA_to_CHS: ; store LBA in cl
     
     ;;Calculate sector
     ;S = (LBA mod SPT) + 1
-    mov ax, [temp]
-    add ax, word 1
+    mov al, [lba]
+    div word [SectorsPerTrack]
+    add dx, word 1
     
     ;;Store the values
     ;mov cl, al              ; sector
-    ;mov dh, [head]          ; head
     ;mov ch, [cyl]           ; cylinder
-    mov cl, 0
+    xor cx, cx
+    mov cl, [cyl]
     shl cl, 6
-    or cl, 16
+    or cl, dl
+    xor dx, dx
+    mov dh, [head]          ; head
     
     mov dh, 1
     ;mov ch, 0

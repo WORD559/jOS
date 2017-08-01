@@ -137,6 +137,7 @@ fb_print:
     popa                    ; restore registers
     ret                     ; return from call
     
+;times 513-($-$$) db 0       ; make bigger than 512 for FAT testing
 ;times os_size-($-$$) db 0           ; fill the rest of the sector
     
 
