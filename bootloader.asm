@@ -139,25 +139,27 @@ loader:
     mov bx, [file_loc]
     add bx, 26
     xor cx, cx
-    mov cl, [fs:bx]
+    mov cx, [fs:bx]
     call .read_multi_segment
     ;call .read_segment
     jmp .jump_OS
     
 .read_multi_segment:
     call .read_segment
-    mov cl, [FAT_seg]
+    mov cx, [FAT_seg]
+    and cx, and_mask
     add cl, byte 1
     mov bx, 0x200
     add bl, cl
     mov cl, byte [fs:bx]
-    cmp cx, 0xFF
-    jne .read_multi_segment
+    cmp cx, 0xFF8
+    jge .read_multi_segment
     ret
     
 .read_segment:
-    mov [FAT_seg], cl
-    add cl, byte 31
+    mov [FAT_seg], cx
+    and cx, and_mask
+    add cx, word 31
     call LBA_to_CHS
     mov dl, [boot_device]
     mov bx, [read_addr]
@@ -182,17 +184,18 @@ loader:
     file_loc: dw 0
     FAT_seg: dw 0
     read_addr: dw 0xBE00
+    and_mask: dw 0000111111111111b
 ;;END OF DATA
     
 LBA_to_CHS: ; store LBA in cl
-    mov [lba], cl           ; store LBA value
+    mov [lba], cx           ; store LBA value
     ;;Calculate cylinder
     ;C = LBA / (HPC*SPT)
     mov ax, [NumberOfHeads]
     mul word [SectorsPerTrack]
     mov [temp],ax
     xor ax, ax
-    mov al, [lba]
+    mov ax, [lba]
     div word [temp]
     mov [cyl], al
     xor ax, ax
@@ -200,7 +203,7 @@ LBA_to_CHS: ; store LBA in cl
     
     ;;Calculate head
     ;H = (LBA / SPT) mod HPC
-    mov al, [lba]
+    mov ax, [lba]
     div word [SectorsPerTrack]
     xor dx, dx
     div word [NumberOfHeads]
@@ -210,7 +213,7 @@ LBA_to_CHS: ; store LBA in cl
     
     ;;Calculate sector
     ;S = (LBA mod SPT) + 1
-    mov al, [lba]
+    mov ax, [lba]
     div word [SectorsPerTrack]
     add dx, word 1
     
@@ -230,7 +233,7 @@ LBA_to_CHS: ; store LBA in cl
     
     
 .data:
-    lba: db 0
+    lba: dw 0
     cyl: db 0
     head: db 0
     temp: dw 0
