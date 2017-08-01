@@ -1,6 +1,7 @@
 ;;%include "bootloader.asm"
 ;This, when compiled, goes onto the floppy disk. The bootloader must be installed into the boot sector.
     BITS 16    
+    ORG 0
 ;0x000b8000 -- framebuffer address
 
 ;;;Colour Codes;;;
@@ -31,7 +32,7 @@ start:
     
     jmp $
     
-    splash_text: db "==Welcome to Bum'dOS v2.5!==\n\n\F0The only OS you can truly call \F6b\F<u\F>m\F:t\F9i\F1n\F5g\F0.", 0
+    splash_text: db "==Welcome to Bum'dOS v3!==\n\n\F0The only OS you can truly call \F6b\F<u\F>m\F:t\F9i\F1n\F5g\F0.\n\nNow with FAT12 support!", 0
     cursor: dw 0x00
     colour: db 0x07
     

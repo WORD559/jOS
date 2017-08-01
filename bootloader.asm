@@ -78,13 +78,13 @@ loader:
     mov ah, 0x02            ; set to read
     int 13h
     cmp ah, 0
-    je .load_OS
+    je .find_OS
     mov si, error_text
     call print
     hlt
 
 ;;;Start loading OS from root directory
-.load_OS:
+.find_OS:
     xor dx, dx              ; blank dx for division
     mov si, fat_loaded
     call print
@@ -98,17 +98,13 @@ loader:
     
 .check_filename:
     inc dx
-    push ax
-    push cx
-    push bx
+    pusha
     mov bx, ax
     mov ax, [bx]
     mov bx, cx
     mov cx, [bx]
     cmp ax, cx
-    pop bx
-    pop cx
-    pop ax
+    popa
     jne .no_match
     cmp dx, 10
     je .found
@@ -124,17 +120,102 @@ loader:
     jmp .check_filename
     
 .found:
-    mov si, bx
-    call print
+    mov [file_loc], bx
+    jmp .load_OS
     
+.jump_OS:
+    mov ax, 0xbe0
+    mov ds, ax
+    push 0xbe00
+    ret
+    
+.load_OS:
+    mov ax, 0
+    mov es, ax
+    mov ax, ds
+    mov fs, ax
+    add bx, word 28
+    cmp [fs:bx], word 512
+    jg .read_multi_segment
+    mov bx, [file_loc]
+    add bx, 26
+    xor cx, cx
+    mov cl, [fs:bx]
+    add cl, byte 31
+    call LBA_to_CHS
+    mov dl, [boot_device]
+    mov bx, 0xBE00
+    mov ah, 2
+    mov al, 1
+    int 13h
+    cmp ah, 0
+    je .jump_OS
+    mov si, error_text
+    call print
     jmp $
     
+.read_multi_segment:
+    mov si, size_error
+    call print
+    
     boot_device: db 0
-    start_text: db "Bum'd OS starting!", 10,10,13,"Bootloader v1", 10,13,0
+    start_text: db "Bootloader v1", 10,13,0
     load_text: db "Loading OS...",0
     error_text: db "Err: Disk load.",0
+    size_error: db "File too big!",0
     fat_loaded: db 10,13,"FATs + root loaded.",0
     filename: db "OS      BIN"
+    file_loc: dw 0
+    
+LBA_to_CHS: ; store LBA in cl
+    mov [lba], cl           ; store LBA value
+    ;;Calculate cylinder
+    ;C = LBA / (HPC*SPT)
+    mov ax, [NumberOfHeads]
+    mul word [SectorsPerTrack]
+    mov [temp],ax
+    xor ax, ax
+    mov al, [lba]
+    div word [temp]
+    mov [cyl], al
+    xor ax, ax
+    xor dx, dx
+    
+    ;;Calculate head
+    ;H = (LBA / SPT) mod HPC
+    mov al, [lba]
+    div word [SectorsPerTrack]
+    mov [temp], dx          ; store remainder -- it's used to find the sector
+    xor dx, dx
+    div word [NumberOfHeads]
+    mov [head], dx
+    xor ax, ax
+    xor dx, dx
+    
+    ;;Calculate sector
+    ;S = (LBA mod SPT) + 1
+    mov ax, [temp]
+    add ax, word 1
+    
+    ;;Store the values
+    ;mov cl, al              ; sector
+    ;mov dh, [head]          ; head
+    ;mov ch, [cyl]           ; cylinder
+    mov cl, 0
+    shl cl, 6
+    or cl, 16
+    
+    mov dh, 1
+    ;mov ch, 0
+    ret
+    
+    
+.data:
+    lba: db 0
+    cyl: db 0
+    head: db 0
+    temp: dw 0
+
     
 cls:
     pusha                   ; back up registers
