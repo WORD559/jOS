@@ -78,35 +78,55 @@ loader:
     mov ah, 0x02            ; set to read
     int 13h
     cmp ah, 0
-    je .load_root
+    je .load_OS
     mov si, error_text
     call print
     hlt
 
-;;;Start loading root directory
-.load_root:
+;;;Start loading OS from root directory
+.load_OS:
     xor dx, dx              ; blank dx for division
     mov si, fat_loaded
     call print
-    jmp $
+    mov al, [SectorsPerFAT] ; calculate memory offset of root directory
+    mul byte [FATcount]
+    mul word [BytesPerSector]
+    add ax, word 0x200
+    mov bx, ax              ; bx contains start of root dir
+    mov cx, filename
+    xor dx, dx
     
-    ;start loading OS from disk
-.load_OS:
-    call print
-    jmp $
-    mov ah, 0x02            ; set to read
-    mov al, sectors         ; how many sectors to load
-    xor ch, ch              ; set cylinder to 0
-    mov cl, 2               ; load from sector 2
-    xor dh, dh              ; head 0 (dh) and boot device
-    mov bx, 0x0200          ; where to read data to
-    int 13h                 ; BIOS interrupt to read data
+.check_filename:
+    inc dx
+    push ax
+    push cx
+    push bx
+    mov bx, ax
+    mov ax, [bx]
+    mov bx, cx
+    mov cx, [bx]
+    cmp ax, cx
+    pop bx
+    pop cx
+    pop ax
+    jne .no_match
+    cmp dx, 10
+    je .found
+    inc ax
+    inc cx
+    jmp .check_filename
+
+.no_match:
+    xor dx, dx
+    add bx, word 32
+    mov cx, filename
+    mov ax, bx
+    jmp .check_filename
     
-    ;Error checking
-    cmp ah, 0
-    je 0x0200
-    mov si, error_text
+.found:
+    mov si, bx
     call print
+    
     jmp $
     
     boot_device: db 0
@@ -114,7 +134,7 @@ loader:
     load_text: db "Loading OS...",0
     error_text: db "Err: Disk load.",0
     fat_loaded: db 10,13,"FATs + root loaded.",0
-    max_sectors: db 17
+    filename: db "OS      BIN"
     
 cls:
     pusha                   ; back up registers
