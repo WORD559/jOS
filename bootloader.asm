@@ -57,13 +57,25 @@ loader:
 .load_fat:
     mov ax, 0x07c0          ; address from start of programs
     mov es, ax
-    mov ah, 0x02            ; set to read
-    mov al, [SectorsPerFAT]   ; how many sectors to load
+    mov al, [SectorsPerFAT] ; how many sectors to load
+    mul byte [FATcount]     ; load both FATs
+    mov dx, ax
+    push dx
+    xor dx, dx              ; blank dx for division
+    mov ax, 32
+    mul word [MaxDirEntries]
+    div word [BytesPerSector] ; number of sectors for root directory
+    pop dx
+    add ax, dx              ; add root directory length and FATs length -- load all three at once
+    xor dh,dh
+    mov dl, [boot_device]
+    
     xor ch, ch              ; cylinder 0
-    mov cl, [ReservedSectors]  ; Load FAT1
+    mov cl, [ReservedSectors]  ; Load from after boot sector
     add cl, byte 1
     xor dh, dh              ; head 0
     mov bx, 0x0200          ; read data to 512B after start of code
+    mov ah, 0x02            ; set to read
     int 13h
     cmp ah, 0
     je .load_root
@@ -75,36 +87,6 @@ loader:
 .load_root:
     xor dx, dx              ; blank dx for division
     mov si, fat_loaded
-    call print
-    mov al, [FATcount]
-    mul word [SectorsPerFAT]
-    add al, [ReservedSectors]
-    div byte [SectorsPerTrack]
-    mov ch, ah
-    mov cl, al              ; Load data from after FATs
-    
-    xor dx, dx
-    xor ax, ax
-    mov al, ch
-    mul byte [SectorsPerTrack]
-    add al, cl
-    mul word [BytesPerSector]
-    mov bx,ax               ; Load to after BOTH FATs in memory
-    
-    xor dx, dx              ; blank dx for division
-    mov ax, 32
-    mul word [MaxDirEntries]
-    div word [BytesPerSector] ; number of sectors
-    
-    xor dh, dh              ; head 0
-    mov dl, [boot_device]   ; boot device
-    
-    mov ah, 0x02
-    
-    int 13h
-    cmp ah, 0
-    je .load_OS
-    mov si, error_text
     call print
     jmp $
     
