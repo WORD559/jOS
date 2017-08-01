@@ -136,22 +136,32 @@ loader:
     mov fs, ax
     add bx, word 28
     cmp [fs:bx], word 512
-    jg .read_multi_segment
     mov bx, [file_loc]
     add bx, 26
     xor cx, cx
     mov cl, [fs:bx]
-    call .read_segment
+    call .read_multi_segment
+    ;call .read_segment
     jmp .jump_OS
     
 .read_multi_segment:
-    jmp $
+    call .read_segment
+    mov cl, [FAT_seg]
+    add cl, byte 1
+    mov bx, 0x200
+    add bl, cl
+    mov cl, byte [fs:bx]
+    cmp cx, 0xFF
+    jne .read_multi_segment
+    ret
     
 .read_segment:
+    mov [FAT_seg], cl
     add cl, byte 31
     call LBA_to_CHS
     mov dl, [boot_device]
-    mov bx, 0xBE00
+    mov bx, [read_addr]
+    add [read_addr], word 0x200
     mov ah, 2
     mov al, 1
     int 13h
@@ -170,6 +180,8 @@ loader:
     fat_loaded: db 10,13,"FATs + root loaded.",0
     filename: db "OS      BIN"
     file_loc: dw 0
+    FAT_seg: dw 0
+    read_addr: dw 0xBE00
 ;;END OF DATA
     
 LBA_to_CHS: ; store LBA in cl

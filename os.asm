@@ -32,7 +32,7 @@ start:
     
     jmp $
     
-    splash_text: db "==Welcome to Bum'dOS v3!==\n\n\F0The only OS you can truly call \F6b\F<u\F>m\F:t\F9i\F1n\F5g\F0.\n\nNow with FAT12 support!", 0
+    splash_text: db "==Welcome to Bum'dOS v3.1!==\n\n\F0The only OS you can truly call \F6b\F<u\F>m\F:t\F9i\F1n\F5g\F0.\n\nNow with FAT12 support for files greater than 512 bytes!", 0
     cursor: dw 0x00
     colour: db 0x07
     
@@ -137,7 +137,7 @@ fb_print:
     popa                    ; restore registers
     ret                     ; return from call
     
-times 513-($-$$) db 1       ; make bigger than 512 for FAT testing
+;times 513-($-$$) db 1       ; make bigger than 512 for FAT testing
 ;times os_size-($-$$) db 0           ; fill the rest of the sector
     
 
