@@ -92,7 +92,6 @@ loader:
     
     ;start loading OS from disk
 .load_OS:
-    mov si, root_loaded
     call print
     jmp $
     mov ah, 0x02            ; set to read
@@ -111,11 +110,10 @@ loader:
     jmp $
     
     boot_device: db 0
-    start_text: db "Bum'd OS starting!", 10,10,13,"Bootloader v1 is loaded!", 10,13,0
-    load_text: db "Loading OS from disk...",0
-    error_text: db "Error loading from disk!",0
-    fat_loaded: db 10,13,"FAT loaded.",0
-    root_loaded: db 10,13,"Root loaded.",0
+    start_text: db "Bum'd OS starting!", 10,10,13,"Bootloader v1", 10,13,0
+    load_text: db "Loading OS...",0
+    error_text: db "Err: Disk load.",0
+    fat_loaded: db 10,13,"FATs + root loaded.",0
     max_sectors: db 17
     
 cls:
