@@ -43,12 +43,12 @@ loader:
     mov ax, 07c0h           ; set data segment to where we're loaded
     mov ds, ax
     
-    call cls                ; clear the screen
+    ;call cls                ; clear the screen
     
-    mov si, start_text      ; put string position into SI
-    call print              ; call print_string routine
-    mov si, load_text
-    call print
+    ;mov si, start_text      ; put string position into SI
+    ;call print              ; call print_string routine
+    ;mov si, load_text
+    ;call print
     
     mov [boot_device], dl   ; back up boot device number
     jmp .load_fat
@@ -155,14 +155,12 @@ loader:
     jmp $
     
 .read_multi_segment:
-    mov si, size_error
-    call print
+    jmp $
     
     boot_device: db 0
-    start_text: db "Bootloader v1", 10,13,0
-    load_text: db "Loading OS...",0
-    error_text: db "Err: Disk load.",0
-    size_error: db "File too big!",0
+    ;start_text: db "Bootloader v1", 10,13,0
+    ;load_text: db "Loading OS...",0
+    error_text: db "Err",0
     fat_loaded: db 10,13,"FATs + root loaded.",0
     filename: db "OS      BIN"
     file_loc: dw 0
@@ -217,13 +215,13 @@ LBA_to_CHS: ; store LBA in cl
     temp: dw 0
 
     
-cls:
-    pusha                   ; back up registers
-    mov ah,00h              ; change graphics mode clears screen
-    mov al,03h              ; text mode -- 80x25, 16 colours
-    int 10h                 ; BIOS interrupt
-    popa                    ; restore registers
-    ret
+;cls:
+;    pusha                   ; back up registers
+;    mov ah,00h              ; change graphics mode clears screen
+;    mov al,03h              ; text mode -- 80x25, 16 colours
+;    int 10h                 ; BIOS interrupt
+;    popa                    ; restore registers
+;    ret
         
 ;Old print subroutine using BIOS interrupts -- use fb_print in main OS
 print:
