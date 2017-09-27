@@ -32,7 +32,7 @@ start:
     
     jmp $
     
-    splash_text: db "==Welcome to Bum'dOS v3!==\n\n\F0The only OS you can truly call \F6b\F<u\F>m\F:t\F9i\F1n\F5g\F0.\n\nNow with FAT12 support!", 0
+    splash_text: db "==Welcome to jOS v3!==\n\n\F0The only OS you can truly call \F6b\F<u\F>m\F:t\F9i\F1n\F5g\F0.\n\nNow with FAT12 support!", 0
     cursor: dw 0x00
     colour: db 0x07
     
