@@ -32,7 +32,7 @@
     dw 0
     BootSignature: db 0x29
     VolumeID: dd 77
-    VolumeLabel: db "jOS   ",0
+    VolumeLabel: db "jOS     ",0
     FSType: db "FAT12   "
 
 loader:
